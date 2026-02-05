@@ -1,0 +1,8 @@
+dotenv
+torch
+transformers
+redis
+rq
+pillow 
+pypdfium2
+fastapi[all]

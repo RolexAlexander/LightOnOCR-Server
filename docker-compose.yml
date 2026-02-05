@@ -1,0 +1,34 @@
+services:
+  api:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DECODE_RESPONSES: False
+      REDIS_QUEUE_NAME: OCR_TASK_QUEUE
+      HF_TOKEN: ${HF_TOKEN}
+    depends_on:
+      - redis
+
+  worker:
+    build: .
+    command: rq worker ${REDIS_QUEUE_NAME}
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - redis
+    deploy:
+      replicas: 2   # scale OCR workers
+      resources:
+       reservations:
+          devices:
+            - capabilities: [gpu]
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
